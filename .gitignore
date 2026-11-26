@@ -1,0 +1,43 @@
+# --- Secretos y variables de entorno (Repo publico) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*service-account*.json
+*credentials*.json
+
+# --- Backend (Python 3.12 / Django 5) ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+db.sqlite3
+staticfiles/
+media/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# --- Frontend (React / Vite / TypeScript / PWA) ---
+node_modules/
+dist/
+dist-ssr/
+dev-dist/
+.vite/
+*.local
+
+# --- Logs y sistema operativo ---
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# --- Editores (se comparten solo settings y extensions del equipo) ---
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
