@@ -27,6 +27,7 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", "http://localhost:5173")
 
 INTERNAL_PROXY_SECRET = os.getenv("INTERNAL_PROXY_SECRET") or "dev-local-proxy-secret"
 CRON_SECRET = os.getenv("CRON_SECRET") or "dev-local-cron-secret"
+OTP_SIGNING_SECRET = os.getenv("OTP_SIGNING_SECRET") or "dev-local-otp-signing-secret"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 

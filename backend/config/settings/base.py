@@ -140,8 +140,16 @@ CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:5173")
 CORS_ALLOW_CREDENTIALS = True
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
 
-# --- Correo ---
-DEFAULT_FROM_EMAIL = os.getenv("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+# --- Correo (apps.core.email.EmailService) ---
+# "console": send_mail -> EMAIL_BACKEND (local/test). "resend": API HTTPS de Resend (producción).
+EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "console").strip().lower()
+# EMAIL_FROM es el nombre canónico; RESEND_FROM_EMAIL se acepta como respaldo heredado.
+DEFAULT_FROM_EMAIL = (
+    os.getenv("EMAIL_FROM") or os.getenv("RESEND_FROM_EMAIL") or "onboarding@resend.dev"
+)
+
+# --- OTP: HMAC-SHA256(OTP_SIGNING_SECRET, "user_id:purpose:target_email:code") ---
+OTP_SIGNING_SECRET = os.getenv("OTP_SIGNING_SECRET", "")
 
 # --- Django REST Framework ---
 REST_FRAMEWORK = {
@@ -155,6 +163,9 @@ REST_FRAMEWORK = {
         "auth": "10/minute",
         "register": "5/hour",
         "password_reset": "5/hour",
+        # OTP_MAX_SENDS_PER_15MIN también por IP real (el límite por usuario vive en services).
+        "otp_request": "3/15m",
+        "otp_verify": "10/minute",
     },
 }
 
@@ -168,6 +179,9 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "SCHEMA_PATH_PREFIX": r"/api/v1",
     "COMPONENT_SPLIT_REQUEST": True,
+    "ENUM_NAME_OVERRIDES": {
+        "ErrorCodeEnum": "apps.core.exceptions.ErrorCode",
+    },
 }
 
 # --- Cloudinary (las firmas se implementan en feature/sales-management-be) ---
