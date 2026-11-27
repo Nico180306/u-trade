@@ -15,6 +15,85 @@ paths:
       responses:
         '204':
           description: Emite la cookie csrftoken.
+  /api/v1/auth/email-otp/request/:
+    post:
+      operationId: auth_email_otp_request
+      summary: Envía un OTP de 6 dígitos al correo de registro (BUYER_EMAIL).
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPRequestResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/auth/email-otp/verify/:
+    post:
+      operationId: auth_email_otp_verify
+      summary: 'Verifica el OTP BUYER_EMAIL (atajo: @uisek.edu.ec verifica también
+        UISEK).'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPCodeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
   /api/v1/auth/login/:
     post:
       operationId: auth_login
@@ -84,6 +163,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserMe'
           description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'NOT_AUTHENTICATED: no hay sesión activa.'
     patch:
       operationId: auth_me_update
       tags:
@@ -334,6 +419,218 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthUnavailableResponse'
           description: ''
+  /api/v1/sellers/{id}/:
+    get:
+      operationId: sellers_profile_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sellers
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerPublicProfile'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: 'NOT_FOUND: no existe o no está activo.'
+  /api/v1/sellers/applications/:
+    post:
+      operationId: sellers_applications_create
+      tags:
+      - sellers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellerApplicationCreateRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerApplication'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/sellers/applications/me/:
+    get:
+      operationId: sellers_applications_me
+      description: Devuelve todas las solicitudes ordenadas por -created_at. El primer
+        elemento es la solicitud vigente; lista vacía si el usuario nunca postuló.
+      summary: Solicitudes del usuario, de la más reciente a la más antigua.
+      tags:
+      - sellers
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SellerApplication'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/sellers/me/:
+    patch:
+      operationId: sellers_me_update
+      tags:
+      - sellers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSellerProfileUpdateRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerOwnProfile'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/sellers/uisek-otp/request/:
+    post:
+      operationId: sellers_uisek_otp_request
+      summary: Envía un OTP al correo institucional @uisek.edu.ec (UISEK_SELLER).
+      tags:
+      - sellers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UisekOTPRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OTPRequestResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+  /api/v1/sellers/uisek-otp/verify/:
+    post:
+      operationId: sellers_uisek_otp_verify
+      summary: Verifica el OTP UISEK_SELLER y vincula el correo institucional.
+      tags:
+      - sellers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OTPCodeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
 components:
   schemas:
     AccountDeleteRequest:
@@ -356,12 +653,82 @@ components:
       required:
       - processed
       - status
+    ErrorCodeEnum:
+      enum:
+      - VALIDATION_ERROR
+      - PARSE_ERROR
+      - NOT_AUTHENTICATED
+      - PERMISSION_DENIED
+      - CSRF_FAILED
+      - NOT_FOUND
+      - METHOD_NOT_ALLOWED
+      - NOT_ACCEPTABLE
+      - UNSUPPORTED_MEDIA_TYPE
+      - THROTTLED
+      - INTERNAL_ERROR
+      - FORBIDDEN_PROXY
+      - UNAUTHORIZED
+      - CONSENT_REQUIRED
+      - DISPOSABLE_EMAIL
+      - EMAIL_ALREADY_REGISTERED
+      - INVALID_CREDENTIALS
+      - INVALID_PASSWORD
+      - INVALID_RESET_TOKEN
+      - EMAIL_ALREADY_VERIFIED
+      - UISEK_ALREADY_VERIFIED
+      - UISEK_EMAIL_ALREADY_IN_USE
+      - INVALID_UISEK_EMAIL
+      - OTP_INVALID
+      - OTP_EXPIRED_OR_INVALID
+      - OTP_LOCKED
+      - OTP_RATE_LIMITED
+      - UISEK_NOT_VERIFIED
+      - ALREADY_A_SELLER
+      - SELLER_APPLICATION_ALREADY_PENDING
+      - SELLER_APPLICATION_NOT_PENDING
+      - REJECTION_REASON_REQUIRED
+      - NOT_A_SELLER
+      type: string
+      description: |-
+        * `VALIDATION_ERROR` - Validation Error
+        * `PARSE_ERROR` - Parse Error
+        * `NOT_AUTHENTICATED` - Not Authenticated
+        * `PERMISSION_DENIED` - Permission Denied
+        * `CSRF_FAILED` - Csrf Failed
+        * `NOT_FOUND` - Not Found
+        * `METHOD_NOT_ALLOWED` - Method Not Allowed
+        * `NOT_ACCEPTABLE` - Not Acceptable
+        * `UNSUPPORTED_MEDIA_TYPE` - Unsupported Media Type
+        * `THROTTLED` - Throttled
+        * `INTERNAL_ERROR` - Internal Error
+        * `FORBIDDEN_PROXY` - Forbidden Proxy
+        * `UNAUTHORIZED` - Unauthorized
+        * `CONSENT_REQUIRED` - Consent Required
+        * `DISPOSABLE_EMAIL` - Disposable Email
+        * `EMAIL_ALREADY_REGISTERED` - Email Already Registered
+        * `INVALID_CREDENTIALS` - Invalid Credentials
+        * `INVALID_PASSWORD` - Invalid Password
+        * `INVALID_RESET_TOKEN` - Invalid Reset Token
+        * `EMAIL_ALREADY_VERIFIED` - Email Already Verified
+        * `UISEK_ALREADY_VERIFIED` - Uisek Already Verified
+        * `UISEK_EMAIL_ALREADY_IN_USE` - Uisek Email Already In Use
+        * `INVALID_UISEK_EMAIL` - Invalid Uisek Email
+        * `OTP_INVALID` - Otp Invalid
+        * `OTP_EXPIRED_OR_INVALID` - Otp Expired Or Invalid
+        * `OTP_LOCKED` - Otp Locked
+        * `OTP_RATE_LIMITED` - Otp Rate Limited
+        * `UISEK_NOT_VERIFIED` - Uisek Not Verified
+        * `ALREADY_A_SELLER` - Already A Seller
+        * `SELLER_APPLICATION_ALREADY_PENDING` - Seller Application Already Pending
+        * `SELLER_APPLICATION_NOT_PENDING` - Seller Application Not Pending
+        * `REJECTION_REASON_REQUIRED` - Rejection Reason Required
+        * `NOT_A_SELLER` - Not A Seller
     ErrorResponse:
       type: object
       description: Formato uniforme de errores de la API (solo documentación OpenAPI).
       properties:
         code:
-          type: string
+          $ref: '#/components/schemas/ErrorCodeEnum'
         message:
           type: string
         details:
@@ -415,6 +782,35 @@ components:
       required:
       - email
       - password
+    OTPCodeRequest:
+      type: object
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 6
+          pattern: ^\d{6}$
+      required:
+      - code
+    OTPRequestResponse:
+      type: object
+      properties:
+        purpose:
+          allOf:
+          - $ref: '#/components/schemas/PurposeEnum'
+          readOnly: true
+        target_email:
+          type: string
+          format: email
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - expires_at
+      - purpose
+      - target_email
     PasswordChangeRequest:
       type: object
       properties:
@@ -470,6 +866,32 @@ components:
         phone_number:
           type: string
           maxLength: 20
+    PatchedSellerProfileUpdateRequest:
+      type: object
+      description: logo_url/logo_public_id no son editables todavía (validación Cloudinary
+        en Orden 4).
+      properties:
+        venture_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        contact_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^\+?[0-9][0-9 \-]{6,18}$
+    PurposeEnum:
+      enum:
+      - BUYER_EMAIL
+      - UISEK_SELLER
+      type: string
+      description: |-
+        * `BUYER_EMAIL` - Correo personal del comprador
+        * `UISEK_SELLER` - Correo institucional del vendedor
     RegisterRequest:
       type: object
       properties:
@@ -498,6 +920,194 @@ components:
       - accept_terms
       - email
       - password
+    SellerApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        venture_name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        contact_phone:
+          type: string
+          readOnly: true
+        instagram_handle:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+        rejection_reason:
+          type: string
+          readOnly: true
+        reviewed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - contact_phone
+      - created_at
+      - description
+      - id
+      - instagram_handle
+      - rejection_reason
+      - reviewed_at
+      - status
+      - venture_name
+    SellerApplicationCreateRequest:
+      type: object
+      properties:
+        venture_name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        contact_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+          pattern: ^\+?[0-9][0-9 \-]{6,18}$
+        instagram_handle:
+          oneOf:
+          - type: string
+            default: ''
+            maxLength: 31
+            pattern: ^@?[A-Za-z0-9._]{1,30}$
+          - type: string
+            maxLength: 0
+      required:
+      - contact_phone
+      - description
+      - venture_name
+    SellerOwnProfile:
+      type: object
+      description: Perfil completo visible solo para el propio vendedor.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        venture_name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        logo_url:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        contact_phone:
+          type: string
+          readOnly: true
+        avg_rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          readOnly: true
+        reviews_count:
+          type: integer
+          readOnly: true
+        releases_count:
+          type: integer
+          readOnly: true
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - avg_rating
+      - contact_phone
+      - created_at
+      - description
+      - id
+      - is_active
+      - logo_url
+      - releases_count
+      - reviews_count
+      - updated_at
+      - venture_name
+    SellerPublicProfile:
+      type: object
+      description: Perfil público (AllowAny). Sin teléfono ni datos del usuario (LOPDP).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        venture_name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        logo_url:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        avg_rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,2})?$
+          readOnly: true
+        reviews_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - avg_rating
+      - created_at
+      - description
+      - id
+      - logo_url
+      - reviews_count
+      - venture_name
+    StatusEnum:
+      enum:
+      - PENDING
+      - APPROVED
+      - REJECTED
+      type: string
+      description: |-
+        * `PENDING` - Pendiente
+        * `APPROVED` - Aprobada
+        * `REJECTED` - Rechazada
+    UisekOTPRequestRequest:
+      type: object
+      properties:
+        uisek_email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+      required:
+      - uisek_email
     UserMe:
       type: object
       properties:
@@ -536,6 +1146,16 @@ components:
         is_uisek_verified:
           type: boolean
           readOnly: true
+        is_seller:
+          type: boolean
+          readOnly: true
+          description: True si el usuario tiene un SellerProfile activo.
+        seller_profile_id:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+          description: ID del SellerProfile activo o null.
         is_staff:
           type: boolean
           readOnly: true
@@ -550,9 +1170,11 @@ components:
       - full_name
       - id
       - is_email_verified
+      - is_seller
       - is_staff
       - is_uisek_verified
       - phone_number
+      - seller_profile_id
       - uisek_email
       - uisek_email_verified_at
   securitySchemes:
