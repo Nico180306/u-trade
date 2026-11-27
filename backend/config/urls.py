@@ -8,4 +8,5 @@ urlpatterns = [
     # Alias de compatibilidad del bootstrap; la ruta canónica es /api/v1/health/.
     path("api/health/", LegacyHealthView.as_view(), name="health-legacy"),
     path("api/v1/", include("apps.core.urls")),
+    path("api/v1/auth/", include("apps.accounts.urls")),
 ]
