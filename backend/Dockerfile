@@ -36,6 +36,8 @@ RUN DJANGO_SETTINGS_MODULE=config.settings.production \
     SECRET_KEY=build-only \
     INTERNAL_PROXY_SECRET=build-only \
     CRON_SECRET=build-only \
+    OTP_SIGNING_SECRET=build-only \
+    RESEND_API_KEY=build-only \
     python manage.py collectstatic --noinput \
     && chown -R appuser:appuser /app/staticfiles
 
