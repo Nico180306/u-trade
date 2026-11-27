@@ -163,3 +163,15 @@ def test_session_cookie_is_httponly_and_lax(csrf_client, user):
     assert cookie["httponly"] is True
     assert cookie["samesite"] == "Lax"
     assert cookie["domain"] == ""
+
+
+def test_password_change_weak_password_reports_new_password_key(logged_client, user):
+    response = logged_client.post(
+        "/api/v1/auth/password-change/",
+        {"current_password": USER_PASSWORD, "new_password": "123"},
+        format="json",
+    )
+
+    body = assert_error(response, 400, "VALIDATION_ERROR")
+    assert body["details"]["new_password"]
+    assert "password" not in body["details"]
