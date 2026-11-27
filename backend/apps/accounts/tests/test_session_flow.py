@@ -29,6 +29,8 @@ def test_full_session_cycle_csrf_login_me_patch_password_change_logout(csrf_clie
     assert me.status_code == 200
     body = me.json()
     assert body["email"] == USER_EMAIL
+    assert body["is_seller"] is False
+    assert body["seller_profile_id"] is None
     assert set(body) == {
         "id",
         "email",
@@ -39,6 +41,8 @@ def test_full_session_cycle_csrf_login_me_patch_password_change_logout(csrf_clie
         "uisek_email_verified_at",
         "is_email_verified",
         "is_uisek_verified",
+        "is_seller",
+        "seller_profile_id",
         "is_staff",
         "created_at",
     }

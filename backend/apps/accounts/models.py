@@ -9,7 +9,7 @@ from apps.core.models import BaseModel
 
 class User(BaseModel, AbstractBaseUser, PermissionsMixin):
     """Usuario de U-Trade. Roles derivados: comprador (autenticado), vendedor (SellerProfile
-    activo, en feature/verification-sellers-be) y admin (is_staff)."""
+    activo, apps.sellers) y admin (is_staff)."""
 
     email = models.EmailField(max_length=254, unique=True)
     full_name = models.CharField(max_length=150, blank=True)
@@ -48,3 +48,52 @@ class User(BaseModel, AbstractBaseUser, PermissionsMixin):
     @property
     def is_uisek_verified(self) -> bool:
         return self.uisek_email_verified_at is not None
+
+    @property
+    def active_seller_profile(self):
+        """SellerProfile activo o None. Usa la relación inversa sin importar apps.sellers
+        (RelatedObjectDoesNotExist hereda de AttributeError). Solo lectura."""
+        profile = getattr(self, "seller_profile", None)
+        return profile if profile is not None and profile.is_active else None
+
+    @property
+    def is_seller(self) -> bool:
+        return self.active_seller_profile is not None
+
+    @property
+    def seller_profile_id(self):
+        profile = self.active_seller_profile
+        return profile.id if profile is not None else None
+
+
+class OTPPurpose(models.TextChoices):
+    BUYER_EMAIL = "BUYER_EMAIL", "Correo personal del comprador"
+    UISEK_SELLER = "UISEK_SELLER", "Correo institucional del vendedor"
+
+
+class EmailVerificationOTP(BaseModel):
+    """Código OTP de 6 dígitos. Solo se persiste su HMAC-SHA256, nunca el código en claro.
+
+    Sin CHECK duro en attempts_count: al alcanzar OTP_MAX_ATTEMPTS el servicio fija
+    consumed_at = now() y responde OTP_LOCKED.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="email_otps")
+    purpose = models.CharField(max_length=20, choices=OTPPurpose.choices)
+    target_email = models.EmailField(max_length=254)
+    code_hash = models.CharField(max_length=64)
+    expires_at = models.DateTimeField()
+    attempts_count = models.PositiveIntegerField(default=0)
+    consumed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "OTP de verificación de correo"
+        verbose_name_plural = "OTP de verificación de correo"
+        indexes = [
+            models.Index(
+                fields=["user", "purpose", "-created_at"], name="otp_user_purpose_created"
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.purpose} · {self.user_id}"
