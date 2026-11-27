@@ -11,3 +11,23 @@ services:
       - ./backend:/app
     env_file:
       - ./backend/.env
+
+  # PostgreSQL 16 local y desechable SOLO para pytest. Opcional: no arranca con `docker compose up`.
+  # Uso: docker compose --profile test up -d postgres-test
+  postgres-test:
+    image: postgres:16
+    container_name: u-trade-postgres-test
+    profiles: ["test"]
+    environment:
+      POSTGRES_USER: utrade
+      POSTGRES_PASSWORD: utrade
+      POSTGRES_DB: utrade_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U utrade -d utrade_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
