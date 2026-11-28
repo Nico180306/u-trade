@@ -20,6 +20,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/email-otp/request/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Envía un OTP de 6 dígitos al correo de registro (BUYER_EMAIL). */
+        post: operations["auth_email_otp_request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/email-otp/verify/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verifica el OTP BUYER_EMAIL (atajo: @uisek.edu.ec verifica también UISEK). */
+        post: operations["auth_email_otp_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login/": {
         parameters: {
             query?: never;
@@ -182,6 +216,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sellers/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sellers_profile_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sellers/applications/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sellers_applications_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sellers/applications/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Solicitudes del usuario, de la más reciente a la más antigua.
+         * @description Devuelve todas las solicitudes ordenadas por -created_at. El primer elemento es la solicitud vigente; lista vacía si el usuario nunca postuló.
+         */
+        get: operations["sellers_applications_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sellers/me/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Perfil completo del vendedor autenticado (incluye contact_phone). */
+        get: operations["sellers_me_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["sellers_me_update"];
+        trace?: never;
+    };
+    "/api/v1/sellers/uisek-otp/request/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Envía un OTP al correo institucional @uisek.edu.ec (UISEK_SELLER). */
+        post: operations["sellers_uisek_otp_request"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sellers/uisek-otp/verify/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Verifica el OTP UISEK_SELLER y vincula el correo institucional. */
+        post: operations["sellers_uisek_otp_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -193,9 +330,46 @@ export interface components {
             status: string;
             processed: number;
         };
+        /**
+         * @description * `VALIDATION_ERROR` - Validation Error
+         *     * `PARSE_ERROR` - Parse Error
+         *     * `NOT_AUTHENTICATED` - Not Authenticated
+         *     * `PERMISSION_DENIED` - Permission Denied
+         *     * `CSRF_FAILED` - Csrf Failed
+         *     * `NOT_FOUND` - Not Found
+         *     * `METHOD_NOT_ALLOWED` - Method Not Allowed
+         *     * `NOT_ACCEPTABLE` - Not Acceptable
+         *     * `UNSUPPORTED_MEDIA_TYPE` - Unsupported Media Type
+         *     * `THROTTLED` - Throttled
+         *     * `INTERNAL_ERROR` - Internal Error
+         *     * `FORBIDDEN_PROXY` - Forbidden Proxy
+         *     * `UNAUTHORIZED` - Unauthorized
+         *     * `CONSENT_REQUIRED` - Consent Required
+         *     * `DISPOSABLE_EMAIL` - Disposable Email
+         *     * `EMAIL_ALREADY_REGISTERED` - Email Already Registered
+         *     * `INVALID_CREDENTIALS` - Invalid Credentials
+         *     * `INVALID_PASSWORD` - Invalid Password
+         *     * `INVALID_RESET_TOKEN` - Invalid Reset Token
+         *     * `EMAIL_ALREADY_VERIFIED` - Email Already Verified
+         *     * `UISEK_ALREADY_VERIFIED` - Uisek Already Verified
+         *     * `UISEK_EMAIL_ALREADY_IN_USE` - Uisek Email Already In Use
+         *     * `INVALID_UISEK_EMAIL` - Invalid Uisek Email
+         *     * `OTP_INVALID` - Otp Invalid
+         *     * `OTP_EXPIRED_OR_INVALID` - Otp Expired Or Invalid
+         *     * `OTP_LOCKED` - Otp Locked
+         *     * `OTP_RATE_LIMITED` - Otp Rate Limited
+         *     * `UISEK_NOT_VERIFIED` - Uisek Not Verified
+         *     * `ALREADY_A_SELLER` - Already A Seller
+         *     * `SELLER_APPLICATION_ALREADY_PENDING` - Seller Application Already Pending
+         *     * `SELLER_APPLICATION_NOT_PENDING` - Seller Application Not Pending
+         *     * `REJECTION_REASON_REQUIRED` - Rejection Reason Required
+         *     * `NOT_A_SELLER` - Not A Seller
+         * @enum {string}
+         */
+        ErrorCodeEnum: "VALIDATION_ERROR" | "PARSE_ERROR" | "NOT_AUTHENTICATED" | "PERMISSION_DENIED" | "CSRF_FAILED" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "UNSUPPORTED_MEDIA_TYPE" | "THROTTLED" | "INTERNAL_ERROR" | "FORBIDDEN_PROXY" | "UNAUTHORIZED" | "CONSENT_REQUIRED" | "DISPOSABLE_EMAIL" | "EMAIL_ALREADY_REGISTERED" | "INVALID_CREDENTIALS" | "INVALID_PASSWORD" | "INVALID_RESET_TOKEN" | "EMAIL_ALREADY_VERIFIED" | "UISEK_ALREADY_VERIFIED" | "UISEK_EMAIL_ALREADY_IN_USE" | "INVALID_UISEK_EMAIL" | "OTP_INVALID" | "OTP_EXPIRED_OR_INVALID" | "OTP_LOCKED" | "OTP_RATE_LIMITED" | "UISEK_NOT_VERIFIED" | "ALREADY_A_SELLER" | "SELLER_APPLICATION_ALREADY_PENDING" | "SELLER_APPLICATION_NOT_PENDING" | "REJECTION_REASON_REQUIRED" | "NOT_A_SELLER";
         /** @description Formato uniforme de errores de la API (solo documentación OpenAPI). */
         ErrorResponse: {
-            code: string;
+            code: components["schemas"]["ErrorCodeEnum"];
             message: string;
             details: {
                 [key: string]: unknown;
@@ -218,6 +392,16 @@ export interface components {
             email: string;
             password: string;
         };
+        OTPCodeRequest: {
+            code: string;
+        };
+        OTPRequestResponse: {
+            readonly purpose: components["schemas"]["PurposeEnum"];
+            /** Format: email */
+            readonly target_email: string;
+            /** Format: date-time */
+            readonly expires_at: string;
+        };
         PasswordChangeRequest: {
             current_password: string;
             new_password: string;
@@ -235,6 +419,18 @@ export interface components {
             full_name?: string;
             phone_number?: string;
         };
+        /** @description logo_url/logo_public_id no son editables todavía (validación Cloudinary en Orden 4). */
+        PatchedSellerProfileUpdateRequest: {
+            venture_name?: string;
+            description?: string;
+            contact_phone?: string;
+        };
+        /**
+         * @description * `BUYER_EMAIL` - Correo personal del comprador
+         *     * `UISEK_SELLER` - Correo institucional del vendedor
+         * @enum {string}
+         */
+        PurposeEnum: "BUYER_EMAIL" | "UISEK_SELLER";
         RegisterRequest: {
             /** Format: email */
             email: string;
@@ -243,6 +439,74 @@ export interface components {
             phone_number?: string;
             accept_terms: boolean;
             accept_privacy: boolean;
+        };
+        SellerApplication: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly venture_name: string;
+            readonly description: string;
+            readonly contact_phone: string;
+            readonly instagram_handle: string;
+            readonly status: components["schemas"]["StatusEnum"];
+            readonly rejection_reason: string;
+            /** Format: date-time */
+            readonly reviewed_at: string | null;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        SellerApplicationCreateRequest: {
+            venture_name: string;
+            description: string;
+            contact_phone: string;
+            instagram_handle?: string;
+        };
+        /** @description Perfil completo visible solo para el propio vendedor. */
+        SellerOwnProfile: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly venture_name: string;
+            readonly description: string;
+            /** Format: uri */
+            readonly logo_url: string | null;
+            readonly contact_phone: string;
+            /** Format: decimal */
+            readonly avg_rating: string;
+            readonly reviews_count: number;
+            readonly releases_count: number;
+            readonly is_active: boolean;
+            /** Format: date-time */
+            readonly created_at: string;
+            /** Format: date-time */
+            readonly updated_at: string;
+        };
+        /**
+         * @description Perfil público (AllowAny). Sin teléfono ni datos del usuario (LOPDP). releases_count se
+         *     expone por simetría de responsabilidad junto a avg_rating y reviews_count.
+         */
+        SellerPublicProfile: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly venture_name: string;
+            readonly description: string;
+            /** Format: uri */
+            readonly logo_url: string | null;
+            /** Format: decimal */
+            readonly avg_rating: string;
+            readonly reviews_count: number;
+            readonly releases_count: number;
+            /** Format: date-time */
+            readonly created_at: string;
+        };
+        /**
+         * @description * `PENDING` - Pendiente
+         *     * `APPROVED` - Aprobada
+         *     * `REJECTED` - Rechazada
+         * @enum {string}
+         */
+        StatusEnum: "PENDING" | "APPROVED" | "REJECTED";
+        UisekOTPRequestRequest: {
+            /** Format: email */
+            uisek_email: string;
         };
         UserMe: {
             /** Format: uuid */
@@ -259,6 +523,13 @@ export interface components {
             readonly uisek_email_verified_at: string | null;
             readonly is_email_verified: boolean;
             readonly is_uisek_verified: boolean;
+            /** @description True si el usuario tiene un SellerProfile activo. */
+            readonly is_seller: boolean;
+            /**
+             * Format: uuid
+             * @description ID del SellerProfile activo o null.
+             */
+            readonly seller_profile_id: string | null;
             readonly is_staff: boolean;
             /** Format: date-time */
             readonly created_at: string;
@@ -287,6 +558,104 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    auth_email_otp_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OTPRequestResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    auth_email_otp_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OTPCodeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMe"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
         };
     };
@@ -378,6 +747,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserMe"];
+                };
+            };
+            /** @description NOT_AUTHENTICATED: no hay sesión activa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -702,6 +1080,286 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthUnavailableResponse"];
+                };
+            };
+        };
+    };
+    sellers_profile_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerPublicProfile"];
+                };
+            };
+            /** @description NOT_FOUND: no existe o no está activo. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    sellers_applications_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SellerApplicationCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerApplication"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    sellers_applications_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerApplication"][];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    sellers_me_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOwnProfile"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    sellers_me_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedSellerProfileUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SellerOwnProfile"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    sellers_uisek_otp_request: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UisekOTPRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OTPRequestResponse"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    sellers_uisek_otp_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OTPCodeRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserMe"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

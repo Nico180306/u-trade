@@ -4,6 +4,7 @@ import { useAuthModal } from '../../../app/authModalContext'
 import { Alert, Badge, Button, Input, Modal, Skeleton } from '../../../shared/components'
 import { getErrorMessage, getFieldErrors } from '../../../shared/utils/errorMessages'
 import { formatEcuadorDateTime } from '../../../shared/utils/format'
+import { BuyerEmailVerificationModal } from '../../seller-onboarding/components/BuyerEmailVerificationModal'
 import type { UserMe } from '../api'
 import {
   useCurrentUser,
@@ -35,6 +36,7 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
   const [passwordClientError, setPasswordClientError] = useState<string | null>(null)
   const [passwordSaved, setPasswordSaved] = useState(false)
 
+  const [verifyEmailModalOpen, setVerifyEmailModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
   const [deletePassword, setDeletePassword] = useState('')
 
@@ -111,17 +113,13 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
   return (
     <div className="space-y-5">
       {/* Resumen de cuenta */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+      <section className="rounded-2xl border border-line bg-surface p-5 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
-            <h1 className="text-xl font-bold tracking-tight text-slate-950">Mi perfil</h1>
-            <p className="mt-0.5 truncate text-sm text-slate-600">{user.email}</p>
+            <h1 className="text-xl font-bold tracking-tight text-ink-900">Mi perfil</h1>
+            <p className="mt-0.5 truncate text-sm text-ink-700">{user.email}</p>
           </div>
-          <Button
-            variant="secondary"
-            loading={logoutMutation.isPending}
-            onClick={handleLogout}
-          >
+          <Button variant="secondary" loading={logoutMutation.isPending} onClick={handleLogout}>
             Cerrar sesión
           </Button>
         </div>
@@ -131,10 +129,11 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
             {user.is_email_verified ? 'Correo verificado' : 'Correo sin verificar'}
           </Badge>
           {user.is_uisek_verified && <Badge variant="info">UISEK verificado</Badge>}
+          {user.is_seller && <Badge variant="success">Vendedor activo</Badge>}
           {user.is_staff && <Badge variant="neutral">Admin</Badge>}
         </div>
 
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-ink-500">
           Cuenta creada el {formatEcuadorDateTime(user.created_at)} (hora Ecuador)
         </p>
 
@@ -145,10 +144,106 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
         )}
       </section>
 
+      {/* Verificación de identidad y acceso de vendedor */}
+      <section className="space-y-4 rounded-2xl border border-line bg-surface p-5 shadow-xs">
+        <div>
+          <h2 className="text-base font-bold text-ink-900">Verificación y ventas</h2>
+          <p className="mt-1 text-sm text-ink-700">
+            Estado de verificación de tu correo personal, correo institucional UISEK y perfil de
+            emprendimiento.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {/* Correo personal */}
+          <div className="rounded-xl border border-line bg-canvas p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-ink-500">Correo personal (compras)</p>
+                <p className="truncate text-sm font-semibold text-ink-900">{user.email}</p>
+              </div>
+              <Badge variant={user.is_email_verified ? 'success' : 'warning'}>
+                {user.is_email_verified ? 'Verificado' : 'Pendiente'}
+              </Badge>
+            </div>
+            {user.is_email_verified && user.email_verified_at ? (
+              <p className="mt-2 text-xs text-ink-500">
+                Verificado el {formatEcuadorDateTime(user.email_verified_at)} (hora Ecuador).
+              </p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                <p className="text-xs text-ink-700">
+                  Verifica tu correo una sola vez con un código de 6 dígitos para poder reservar
+                  productos.
+                </p>
+                <Button fullWidth onClick={() => setVerifyEmailModalOpen(true)}>
+                  Verificar mi correo ahora
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Correo institucional UISEK */}
+          <div className="rounded-xl border border-line bg-canvas p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-ink-500">
+                  Correo institucional UISEK (vendedores)
+                </p>
+                <p className="truncate text-sm font-semibold text-ink-900">
+                  {user.uisek_email || 'No vinculado'}
+                </p>
+              </div>
+              <Badge variant={user.is_uisek_verified ? 'info' : 'neutral'}>
+                {user.is_uisek_verified ? 'UISEK verificado' : 'No verificado'}
+              </Badge>
+            </div>
+            {user.is_uisek_verified && user.uisek_email_verified_at ? (
+              <p className="mt-2 text-xs text-ink-500">
+                Vinculado el {formatEcuadorDateTime(user.uisek_email_verified_at)} (hora Ecuador).
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-ink-500">
+                Requerido únicamente si deseas postular como estudiante vendedor en U-Trade.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Acceso a vendedor */}
+        <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
+          {user.is_seller ? (
+            <>
+              <Link
+                to="/seller/profile"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-900"
+              >
+                Mi emprendimiento
+              </Link>
+              {user.seller_profile_id && (
+                <Link
+                  to={`/sellers/${user.seller_profile_id}`}
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink-900 transition-colors hover:bg-canvas"
+                >
+                  Ver perfil público
+                </Link>
+              )}
+            </>
+          ) : (
+            <Link
+              to="/become-seller"
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-900"
+            >
+              Quiero vender en U-Trade
+            </Link>
+          )}
+        </div>
+      </section>
+
       {/* Editar perfil */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-        <h2 className="text-base font-bold text-slate-950">Datos personales</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-2xl border border-line bg-surface p-5 shadow-xs">
+        <h2 className="text-base font-bold text-ink-900">Datos personales</h2>
+        <p className="mt-1 text-sm text-ink-700">
           Actualiza tu nombre visible y teléfono de contacto.
         </p>
 
@@ -197,9 +292,9 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
       </section>
 
       {/* Cambiar contraseña */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-        <h2 className="text-base font-bold text-slate-950">Cambiar contraseña</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <section className="rounded-2xl border border-line bg-surface p-5 shadow-xs">
+        <h2 className="text-base font-bold text-ink-900">Cambiar contraseña</h2>
+        <p className="mt-1 text-sm text-ink-700">
           Tu sesión actual permanecerá activa y se cerrarán las sesiones en otros dispositivos.
         </p>
 
@@ -257,7 +352,7 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
       </section>
 
       {/* Zona de peligro: Anonimización LOPDP */}
-      <section className="rounded-2xl border border-rose-200 bg-rose-50/40 p-5">
+      <section className="rounded-2xl border border-rose-200 bg-feedback-error-bg/70 p-5">
         <h2 className="text-base font-bold text-rose-900">Eliminar cuenta (LOPDP)</h2>
         <p className="mt-1 text-sm text-rose-800">
           Esta acción anonimiza tus datos personales (correo, nombre y teléfono), cierra tu sesión
@@ -278,6 +373,12 @@ function AuthenticatedProfile({ user }: AuthenticatedProfileProps) {
           </Button>
         </div>
       </section>
+
+      <BuyerEmailVerificationModal
+        open={verifyEmailModalOpen}
+        onClose={() => setVerifyEmailModalOpen(false)}
+        userEmail={user.email}
+      />
 
       <Modal
         open={deleteModalOpen}
@@ -359,10 +460,11 @@ export function ProfilePage() {
 
   if (!user) {
     return (
-      <section className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-xs">
-        <h1 className="text-xl font-bold text-slate-950">Inicia sesión para ver tu perfil</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Aquí podrás actualizar tus datos personales, cambiar tu contraseña o gestionar tu cuenta.
+      <section className="mx-auto max-w-md rounded-2xl border border-line bg-surface p-5 text-center shadow-xs">
+        <h1 className="text-xl font-bold text-ink-900">Inicia sesión para ver tu perfil</h1>
+        <p className="mt-2 text-sm text-ink-700">
+          Aquí podrás actualizar tus datos personales, verificar tu correo o gestionar tu
+          emprendimiento.
         </p>
         <div className="mt-5 flex flex-col gap-2.5">
           <Button size="lg" fullWidth onClick={() => openAuthModal('login')}>
@@ -370,7 +472,7 @@ export function ProfilePage() {
           </Button>
           <Link
             to="/register"
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-surface px-4 text-sm font-semibold text-ink-900 hover:bg-canvas"
           >
             Crear una cuenta nueva
           </Link>
