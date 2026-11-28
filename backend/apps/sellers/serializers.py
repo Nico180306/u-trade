@@ -56,7 +56,8 @@ class SellerApplicationSerializer(serializers.ModelSerializer):
 
 
 class SellerPublicProfileSerializer(serializers.ModelSerializer):
-    """Perfil público (AllowAny). Sin teléfono ni datos del usuario (LOPDP)."""
+    """Perfil público (AllowAny). Sin teléfono ni datos del usuario (LOPDP). releases_count se
+    expone por simetría de responsabilidad junto a avg_rating y reviews_count."""
 
     class Meta:
         model = SellerProfile
@@ -67,6 +68,7 @@ class SellerPublicProfileSerializer(serializers.ModelSerializer):
             "logo_url",
             "avg_rating",
             "reviews_count",
+            "releases_count",
             "created_at",
         ]
         read_only_fields = fields

@@ -241,12 +241,20 @@ def update_seller_profile(user: User, **changes) -> SellerProfile:
 
 
 def deactivate_seller_profile_for_anonymization(user: User) -> SellerProfile | None:
-    """Desactiva el SellerProfile y borra su teléfono de contacto al anonimizar la cuenta.
+    """Borra los datos de contacto de vendedor al anonimizar la cuenta (LOPDP).
 
     Debe invocarse dentro de la transacción de accounts.services.anonymize_user_account (con el
-    User ya bloqueado). Sin perfil, no hace nada. El perfil se conserva (is_active=False) para
-    preservar la integridad referencial histórica de ventas y reseñas.
+    User ya bloqueado):
+    - Limpia contact_phone e instagram_handle en TODAS las SellerApplication del usuario
+      (también si nunca fue aprobado).
+    - Desactiva el SellerProfile y limpia su contact_phone. El perfil y las solicitudes se
+      conservan para preservar la integridad referencial histórica de ventas y reseñas.
     """
+    now = timezone.now()
+    SellerApplication.objects.filter(user=user).update(
+        contact_phone="", instagram_handle="", updated_at=now
+    )
+
     profile = SellerProfile.objects.select_for_update().filter(user=user).first()
     if profile is None:
         return None

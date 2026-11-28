@@ -511,6 +511,26 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
           description: ''
   /api/v1/sellers/me/:
+    get:
+      operationId: sellers_me_retrieve
+      summary: Perfil completo del vendedor autenticado (incluye contact_phone).
+      tags:
+      - sellers
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SellerOwnProfile'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: ''
     patch:
       operationId: sellers_me_update
       tags:
@@ -1051,7 +1071,9 @@ components:
       - venture_name
     SellerPublicProfile:
       type: object
-      description: Perfil público (AllowAny). Sin teléfono ni datos del usuario (LOPDP).
+      description: |-
+        Perfil público (AllowAny). Sin teléfono ni datos del usuario (LOPDP). releases_count se
+        expone por simetría de responsabilidad junto a avg_rating y reviews_count.
       properties:
         id:
           type: string
@@ -1076,6 +1098,9 @@ components:
         reviews_count:
           type: integer
           readOnly: true
+        releases_count:
+          type: integer
+          readOnly: true
         created_at:
           type: string
           format: date-time
@@ -1086,6 +1111,7 @@ components:
       - description
       - id
       - logo_url
+      - releases_count
       - reviews_count
       - venture_name
     StatusEnum:
