@@ -1,32 +1,22 @@
 import { ApiError } from '../../api/client'
+import {
+  ERROR_MESSAGES,
+  getErrorMessage as getCodeErrorMessage,
+} from '../constants/errorMessages'
 
-export const ERROR_MESSAGES: Record<string, string> = {
-  // Auth Core
-  INVALID_CREDENTIALS: 'Correo o contraseña incorrectos.',
-  EMAIL_ALREADY_REGISTERED: 'Ya existe una cuenta registrada con este correo.',
-  DISPOSABLE_EMAIL:
-    'No se permiten correos temporales o desechables. Usa un correo personal o institucional.',
-  CONSENT_REQUIRED: 'Debes aceptar los Términos de Uso y la Política de Privacidad.',
-  INVALID_PASSWORD: 'La contraseña actual no es correcta.',
-  INVALID_RESET_TOKEN:
-    'El enlace de restablecimiento no es válido o ya expiró. Solicita uno nuevo.',
+export { ERROR_MESSAGES }
 
-  // Core / Seguridad HTTP
-  NOT_AUTHENTICATED: 'Debes iniciar sesión para continuar.',
-  PERMISSION_DENIED: 'No tienes permiso para realizar esta acción.',
-  CSRF_FAILED: 'Tu sesión de seguridad expiró. Recarga la página e inténtalo de nuevo.',
-  FORBIDDEN_PROXY: 'No se pudo autenticar el canal con el servidor. Intenta de nuevo.',
-  UNAUTHORIZED: 'No autorizado.',
-  THROTTLED: 'Demasiados intentos en poco tiempo. Espera unos segundos y vuelve a intentarlo.',
-  VALIDATION_ERROR: 'Revisa los datos ingresados; algunos campos no son válidos.',
-  PARSE_ERROR: 'La solicitud enviada no tiene un formato válido.',
-  NOT_FOUND: 'El recurso solicitado no existe.',
-  METHOD_NOT_ALLOWED: 'Operación no permitida.',
-  NOT_ACCEPTABLE: 'Formato de respuesta no soportado.',
-  UNSUPPORTED_MEDIA_TYPE: 'Formato de contenido no soportado.',
-  INTERNAL_ERROR: 'Ocurrió un error interno en el servidor. Intenta nuevamente más tarde.',
-  NETWORK_ERROR: 'No se pudo conectar con el servidor. Verifica tu conexión a internet.',
-  PROXY_MISCONFIGURED: 'El proxy de API no está configurado en este entorno.',
+export function formatWaitDuration(seconds: number): string {
+  const safeSeconds = Math.max(1, Math.ceil(seconds))
+  if (safeSeconds < 60) {
+    return `${safeSeconds} ${safeSeconds === 1 ? 'segundo' : 'segundos'}`
+  }
+  const minutes = Math.floor(safeSeconds / 60)
+  const remainder = safeSeconds % 60
+  if (remainder === 0) {
+    return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`
+  }
+  return `${minutes} min ${remainder} s`
 }
 
 function firstDetailMessage(details: Record<string, unknown>): string | null {
@@ -35,7 +25,9 @@ function firstDetailMessage(details: Record<string, unknown>): string | null {
       return value
     }
     if (Array.isArray(value)) {
-      const firstText = value.find((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      const firstText = value.find(
+        (item): item is string => typeof item === 'string' && item.trim().length > 0,
+      )
       if (firstText) {
         return firstText
       }
@@ -54,7 +46,9 @@ export function getFieldErrors(error: unknown): Record<string, string> {
     if (typeof value === 'string' && value.trim()) {
       fieldErrors[key] = value
     } else if (Array.isArray(value)) {
-      const texts = value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      const texts = value.filter(
+        (item): item is string => typeof item === 'string' && item.trim().length > 0,
+      )
       if (texts.length > 0) {
         fieldErrors[key] = texts.join(' ')
       }
@@ -68,8 +62,20 @@ export function getErrorMessage(
   fallback = 'Ocurrió un error inesperado. Intenta nuevamente.',
 ): string {
   if (error instanceof ApiError) {
+    if (error.code === 'OTP_INVALID' && typeof error.details.attempts_remaining === 'number') {
+      const remaining = error.details.attempts_remaining
+      return remaining === 1
+        ? 'El código no coincide. Te queda 1 intento antes de bloquear este código.'
+        : `El código no coincide. Te quedan ${remaining} intentos.`
+    }
+    if (
+      error.code === 'OTP_RATE_LIMITED' &&
+      typeof error.details.retry_after_seconds === 'number'
+    ) {
+      return `Has alcanzado el límite de 3 envíos en 15 minutos. Intenta de nuevo en ${formatWaitDuration(error.details.retry_after_seconds)}.`
+    }
     if (error.code === 'THROTTLED' && typeof error.details.wait_seconds === 'number') {
-      return `Demasiados intentos. Intenta nuevamente en ${error.details.wait_seconds} segundos.`
+      return `Demasiados intentos. Intenta nuevamente en ${formatWaitDuration(error.details.wait_seconds)}.`
     }
     if (error.code === 'VALIDATION_ERROR') {
       const detail = firstDetailMessage(error.details)
@@ -77,7 +83,7 @@ export function getErrorMessage(
         return detail
       }
     }
-    return ERROR_MESSAGES[error.code] ?? (error.message || fallback)
+    return getCodeErrorMessage(error.code, error.message || fallback)
   }
 
   if (error instanceof Error && error.message) {
