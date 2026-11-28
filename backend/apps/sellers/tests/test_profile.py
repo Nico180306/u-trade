@@ -1,10 +1,12 @@
 """Perfil público (AllowAny) y edición restringida a vendedor activo."""
 
 import uuid
+from unittest import mock
 
 import pytest
 
-from apps.core.testing import assert_error, make_client
+from apps.accounts.services import anonymize_user_account
+from apps.core.testing import USER_PASSWORD, assert_error, make_client
 from apps.sellers.models import SellerProfile
 
 pytestmark = pytest.mark.django_db
@@ -100,3 +102,30 @@ def test_patch_me_validates_format(logged_client, seller_profile):
         "VALIDATION_ERROR",
     )
     assert {"venture_name", "contact_phone"} <= set(body["details"])
+
+
+def test_public_profile_returns_404_after_account_deletion(logged_client, seller_profile):
+    assert make_client().get(public_url(seller_profile.id)).status_code == 200
+
+    response = logged_client.post(
+        "/api/v1/auth/me/delete/", {"current_password": USER_PASSWORD}, format="json"
+    )
+
+    assert response.status_code == 204, response.content
+    assert_error(make_client().get(public_url(seller_profile.id)), 404, "NOT_FOUND")
+    seller_profile.refresh_from_db()
+    assert seller_profile.is_active is False
+    assert seller_profile.contact_phone == ""
+    assert seller_profile.user.is_active is False  # el perfil se conserva, desactivado
+
+
+def test_profile_deactivation_rolls_back_with_failed_anonymization(seller_profile):
+    with (
+        mock.patch("apps.accounts.services.record_audit", side_effect=RuntimeError("boom")),
+        pytest.raises(RuntimeError),
+    ):
+        anonymize_user_account(seller_profile.user)
+
+    seller_profile.refresh_from_db()
+    assert seller_profile.is_active is True
+    assert seller_profile.contact_phone == "0991234567"

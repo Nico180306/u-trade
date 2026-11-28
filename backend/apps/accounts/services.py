@@ -24,6 +24,7 @@ from apps.accounts.validators import is_disposable_email, is_uisek_email
 from apps.core.email import EmailService
 from apps.core.exceptions import DomainError
 from apps.core.services import record_audit
+from apps.sellers.services import deactivate_seller_profile_for_anonymization
 
 ANONYMIZED_FULL_NAME = "Usuario eliminado"
 ANONYMIZED_EMAIL_DOMAIN = "anon.utrade.local"
@@ -221,8 +222,7 @@ def anonymize_user_account(user: User) -> None:
     #   activas o futuras (DomainError), antes de cualquier modificación.
     # TODO(feature/reservations-engine-be): cancelar las reservas CONFIRMED del usuario que
     #   correspondan, restaurando stock vía reservations.services.
-    # TODO(acuerdo de equipo): desactivar SellerProfile y anonimizar sus datos de contacto
-    #   vía sellers.services (fuera del alcance de feature/verification-sellers-be).
+    deactivate_seller_profile_for_anonymization(locked)
 
     locked.email = f"deleted_{locked.id.hex}@{ANONYMIZED_EMAIL_DOMAIN}"
     locked.full_name = ANONYMIZED_FULL_NAME
