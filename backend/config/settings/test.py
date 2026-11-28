@@ -27,6 +27,9 @@ DATABASES = {"default": dj_database_url.parse(_test_database_url, conn_max_age=0
 SECRET_KEY = "django-insecure-test-only"
 INTERNAL_PROXY_SECRET = "test-proxy-secret"
 CRON_SECRET = "test-cron-secret"
+OTP_SIGNING_SECRET = "test-otp-signing-secret"
+EMAIL_PROVIDER = "console"
+RESEND_API_KEY = ""
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 

@@ -18,3 +18,15 @@ def is_disposable_email(email: str) -> bool:
     labels = domain.split(".")
     blocked = _disposable_domains()
     return any(".".join(labels[i:]) in blocked for i in range(len(labels) - 1))
+
+
+UISEK_EMAIL_DOMAIN = "uisek.edu.ec"
+
+
+def is_uisek_email(email: str) -> bool:
+    """True solo para el dominio exacto @uisek.edu.ec (sin subdominios ni sufijos falsos como
+    uisek.edu.ec.evil.com o mail.uisek.edu.ec) y sin espacios."""
+    if not email or any(ch.isspace() for ch in email) or email.count("@") != 1:
+        return False
+    local, domain = email.rsplit("@", 1)
+    return bool(local) and domain.lower() == UISEK_EMAIL_DOMAIN

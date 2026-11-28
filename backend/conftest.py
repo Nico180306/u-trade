@@ -6,6 +6,7 @@ from rest_framework.test import APIClient
 
 from apps.accounts.models import User
 from apps.core.testing import USER_EMAIL, USER_PASSWORD, bootstrap_csrf, login, make_client
+from apps.core.throttling import ClientIPRateThrottle
 
 
 @pytest.fixture(autouse=True)
@@ -40,3 +41,11 @@ def logged_client(csrf_client, user) -> APIClient:
     response = login(csrf_client)
     assert response.status_code == 200, response.content
     return csrf_client
+
+
+@pytest.fixture
+def relaxed_otp_throttle(monkeypatch):
+    """Sube las tasas por IP de OTP para probar las reglas por (usuario, propósito) de services
+    sin que el throttle por IP (3/15m) responda antes con THROTTLED."""
+    monkeypatch.setitem(ClientIPRateThrottle.THROTTLE_RATES, "otp_request", "100/minute")
+    monkeypatch.setitem(ClientIPRateThrottle.THROTTLE_RATES, "otp_verify", "100/minute")

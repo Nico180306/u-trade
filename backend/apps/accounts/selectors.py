@@ -16,3 +16,11 @@ def get_active_user_by_email(email: str) -> User | None:
 
 def email_is_registered(email: str) -> bool:
     return User.objects.filter(email=normalize_email_address(email)).exists()
+
+
+def uisek_email_claimed_by_other(uisek_email: str, *, exclude_user_id: uuid.UUID) -> bool:
+    return (
+        User.objects.filter(uisek_email=normalize_email_address(uisek_email))
+        .exclude(pk=exclude_user_id)
+        .exists()
+    )

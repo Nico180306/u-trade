@@ -13,9 +13,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.accounts import services
+from apps.accounts.models import OTPPurpose
 from apps.accounts.serializers import (
     AccountDeleteSerializer,
     LoginSerializer,
+    OTPCodeSerializer,
+    OTPRequestResponseSerializer,
     PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
@@ -98,7 +101,14 @@ class LogoutView(APIView):
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(operation_id="auth_me_retrieve", tags=TAG, responses={200: UserMeSerializer})
+    @extend_schema(
+        operation_id="auth_me_retrieve",
+        tags=TAG,
+        responses={
+            200: UserMeSerializer,
+            403: OpenApiResponse(ERR, description="NOT_AUTHENTICATED: no hay sesión activa."),
+        },
+    )
     def get(self, request):
         return Response(UserMeSerializer(request.user).data)
 
@@ -190,3 +200,44 @@ class PasswordChangeView(APIView):
         serializer.is_valid(raise_exception=True)
         services.change_password(request, request.user, **serializer.validated_data)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# --- Verificación OTP del correo de comprador (purpose = BUYER_EMAIL) ----------------------
+
+
+class EmailOTPRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ClientIPRateThrottle]
+    throttle_scope = "otp_request"
+
+    @extend_schema(
+        operation_id="auth_email_otp_request",
+        tags=TAG,
+        request=None,
+        summary="Envía un OTP de 6 dígitos al correo de registro (BUYER_EMAIL).",
+        responses={200: OTPRequestResponseSerializer, 400: ERR, 403: ERR, 429: ERR},
+    )
+    def post(self, request):
+        otp = services.request_email_otp(request.user, OTPPurpose.BUYER_EMAIL)
+        return Response(OTPRequestResponseSerializer(otp).data)
+
+
+class EmailOTPVerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ClientIPRateThrottle]
+    throttle_scope = "otp_verify"
+
+    @extend_schema(
+        operation_id="auth_email_otp_verify",
+        tags=TAG,
+        request=OTPCodeSerializer,
+        summary="Verifica el OTP BUYER_EMAIL (atajo: @uisek.edu.ec verifica también UISEK).",
+        responses={200: UserMeSerializer, 400: ERR, 403: ERR, 409: ERR, 429: ERR},
+    )
+    def post(self, request):
+        serializer = OTPCodeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = services.verify_email_otp(
+            request.user, OTPPurpose.BUYER_EMAIL, serializer.validated_data["code"]
+        )
+        return Response(UserMeSerializer(user).data)

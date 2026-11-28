@@ -11,6 +11,8 @@ urlpatterns = [
     path("logout/", views.LogoutView.as_view(), name="logout"),
     path("me/", views.MeView.as_view(), name="me"),
     path("me/delete/", views.AccountDeleteView.as_view(), name="me-delete"),
+    path("email-otp/request/", views.EmailOTPRequestView.as_view(), name="email-otp-request"),
+    path("email-otp/verify/", views.EmailOTPVerifyView.as_view(), name="email-otp-verify"),
     path(
         "password-reset/request/",
         views.PasswordResetRequestView.as_view(),

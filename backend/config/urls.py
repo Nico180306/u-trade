@@ -9,4 +9,5 @@ urlpatterns = [
     path("api/health/", LegacyHealthView.as_view(), name="health-legacy"),
     path("api/v1/", include("apps.core.urls")),
     path("api/v1/auth/", include("apps.accounts.urls")),
+    path("api/v1/sellers/", include("apps.sellers.urls")),
 ]

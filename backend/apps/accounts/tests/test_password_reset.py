@@ -113,4 +113,5 @@ def test_confirm_with_valid_token_but_weak_password(
     )
 
     body = assert_error(response, 400, "VALIDATION_ERROR")
-    assert body["details"]["password"]
+    assert body["details"]["new_password"]
+    assert "password" not in body["details"]

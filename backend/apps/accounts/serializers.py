@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from apps.accounts.models import User
+from apps.accounts.models import OTPPurpose, User
 
 
 def _password_field() -> serializers.CharField:
@@ -14,6 +14,12 @@ def _password_field() -> serializers.CharField:
 class UserMeSerializer(serializers.ModelSerializer):
     is_email_verified = serializers.BooleanField(read_only=True)
     is_uisek_verified = serializers.BooleanField(read_only=True)
+    is_seller = serializers.BooleanField(
+        read_only=True, help_text="True si el usuario tiene un SellerProfile activo."
+    )
+    seller_profile_id = serializers.UUIDField(
+        read_only=True, allow_null=True, help_text="ID del SellerProfile activo o null."
+    )
 
     class Meta:
         model = User
@@ -27,6 +33,8 @@ class UserMeSerializer(serializers.ModelSerializer):
             "uisek_email_verified_at",
             "is_email_verified",
             "is_uisek_verified",
+            "is_seller",
+            "seller_profile_id",
             "is_staff",
             "created_at",
         ]
@@ -69,3 +77,17 @@ class PasswordChangeSerializer(serializers.Serializer):
 
 class AccountDeleteSerializer(serializers.Serializer):
     current_password = _password_field()
+
+
+class OTPCodeSerializer(serializers.Serializer):
+    code = serializers.RegexField(
+        r"^\d{6}$",
+        max_length=6,
+        error_messages={"invalid": "El código debe tener exactamente 6 dígitos."},
+    )
+
+
+class OTPRequestResponseSerializer(serializers.Serializer):
+    purpose = serializers.ChoiceField(choices=OTPPurpose.choices, read_only=True)
+    target_email = serializers.EmailField(read_only=True)
+    expires_at = serializers.DateTimeField(read_only=True)

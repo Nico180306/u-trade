@@ -12,13 +12,22 @@ from .base import env_list
 
 DEBUG = False
 
-for _required in ("SECRET_KEY", "INTERNAL_PROXY_SECRET", "CRON_SECRET"):
+_REQUIRED_ENV = (
+    "SECRET_KEY",
+    "INTERNAL_PROXY_SECRET",
+    "CRON_SECRET",
+    "OTP_SIGNING_SECRET",
+    "RESEND_API_KEY",
+)
+for _required in _REQUIRED_ENV:
     if not os.getenv(_required):
         raise ImproperlyConfigured(f"Falta la variable de entorno obligatoria {_required}.")
 
 SECRET_KEY = os.environ["SECRET_KEY"]
 INTERNAL_PROXY_SECRET = os.environ["INTERNAL_PROXY_SECRET"]
 CRON_SECRET = os.environ["CRON_SECRET"]
+OTP_SIGNING_SECRET = os.environ["OTP_SIGNING_SECRET"]
+RESEND_API_KEY = os.environ["RESEND_API_KEY"]
 
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
@@ -42,14 +51,8 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
-# Correo vía SMTP de Resend (sin dependencias nuevas).
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.resend.com"
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = "resend"
-EMAIL_HOST_PASSWORD = os.getenv("RESEND_API_KEY", "")
-EMAIL_TIMEOUT = 10
+# Correo vía API HTTPS de Resend (apps.core.email, urllib estándar, timeout 5 s).
+EMAIL_PROVIDER = os.getenv("EMAIL_PROVIDER", "resend").strip().lower()
 
 # Logs estructurados JSON a stdout.
 LOGGING = {
@@ -68,4 +71,7 @@ if SENTRY_DSN:
         environment=os.getenv("SENTRY_ENVIRONMENT", "production"),
         traces_sample_rate=0.0,
         send_default_pii=False,
+        # Sin variables locales en los frames: evita que códigos OTP o cuerpos de correo
+        # lleguen a Sentry dentro de un traceback.
+        include_local_variables=False,
     )

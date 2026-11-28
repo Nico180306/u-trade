@@ -29,6 +29,8 @@ def test_full_session_cycle_csrf_login_me_patch_password_change_logout(csrf_clie
     assert me.status_code == 200
     body = me.json()
     assert body["email"] == USER_EMAIL
+    assert body["is_seller"] is False
+    assert body["seller_profile_id"] is None
     assert set(body) == {
         "id",
         "email",
@@ -39,6 +41,8 @@ def test_full_session_cycle_csrf_login_me_patch_password_change_logout(csrf_clie
         "uisek_email_verified_at",
         "is_email_verified",
         "is_uisek_verified",
+        "is_seller",
+        "seller_profile_id",
         "is_staff",
         "created_at",
     }
@@ -159,3 +163,15 @@ def test_session_cookie_is_httponly_and_lax(csrf_client, user):
     assert cookie["httponly"] is True
     assert cookie["samesite"] == "Lax"
     assert cookie["domain"] == ""
+
+
+def test_password_change_weak_password_reports_new_password_key(logged_client, user):
+    response = logged_client.post(
+        "/api/v1/auth/password-change/",
+        {"current_password": USER_PASSWORD, "new_password": "123"},
+        format="json",
+    )
+
+    body = assert_error(response, 400, "VALIDATION_ERROR")
+    assert body["details"]["new_password"]
+    assert "password" not in body["details"]
