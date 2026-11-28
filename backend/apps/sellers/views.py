@@ -131,6 +131,17 @@ class SellerMeView(APIView):
     permission_classes = [IsAuthenticated, IsActiveSeller]
 
     @extend_schema(
+        operation_id="sellers_me_retrieve",
+        tags=TAG,
+        summary="Perfil completo del vendedor autenticado (incluye contact_phone).",
+        responses={200: SellerOwnProfileSerializer, 403: ERR},
+    )
+    def get(self, request):
+        # Solo lectura: IsActiveSeller ya garantizó que existe un perfil activo.
+        profile = selectors.get_active_seller_profile_for_user(request.user)
+        return Response(SellerOwnProfileSerializer(profile).data)
+
+    @extend_schema(
         operation_id="sellers_me_update",
         tags=TAG,
         request=SellerProfileUpdateSerializer,

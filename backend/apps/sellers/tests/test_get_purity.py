@@ -26,3 +26,11 @@ def test_my_applications_get_does_not_write(logged_client, pending_application):
 
 def test_me_get_with_seller_profile_does_not_write(logged_client, seller_profile):
     _assert_get_is_pure(logged_client, "/api/v1/auth/me/", 200)
+
+
+def test_seller_me_get_does_not_write(logged_client, seller_profile):
+    _assert_get_is_pure(logged_client, "/api/v1/sellers/me/", 200)
+
+
+def test_seller_me_get_for_non_seller_does_not_write(logged_client, user):
+    _assert_get_is_pure(logged_client, "/api/v1/sellers/me/", 403)
